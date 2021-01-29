@@ -1,0 +1,285 @@
+ load data frame
+
+hcn19<-read.csv("hcn19_data.csv",header=T,dec=".", sep=",", na.strings=".")
+summary(hcn19)
+
+#reduce to midseason only
+hcn19.midseason<-hcn19[hcn19$season=="Midseason",]
+summary(hcn19.midseason)
+0attach(hcn19.midseason)
+
+# by default factor levels are listed in alphabetical order.
+# for this dataset, I've already explored and don't like the order R lists them in by default
+# I'm going to create a new vector where they are rearranged how I like
+
+ftreatment<-factor(treatment,levels=c("control","propulse_8oz","propulse_14oz","counter","telone_3gal","telone_6gal"))
+
+# The new vector is ftreatment. Note that you have to call the factor levels exactly as they are named or you will lose them
+
+###############################
+
+## load library (this is the main r package I use to generate graphs)
+# there is a good directory for ggplot2 if you google it. you can also use the help() function to answer questions about specific functions
+library(ggplot2)
+
+########################
+# to generate your graphs, you need means, standard errors and means separation letters by nematicide treatment for each variable
+# we are going to generate these first
+
+#create "mylength" function that will be used to correctly handle missing values when calculating # reps for standard error
+mylength<-function(x) {sum(!is.na(x))}
+
+# generate dataframe of means for freeliving nematodes by nematicide ftreatment "by=list(Ftrt=ftreatment)" 
+# your original name for nematicide ftreatments is "ftreatment", I've renamed to "Ftrt" in this subset so it doesn't create problems if you have to rerun code
+freeliving.mean <- aggregate(freeliving, by=list(Ftrt=ftreatment), function(x) mean(x, na.rm=T))    #first argument is the data being analyzed (response variable)
+freeliving.mean # note that this is a data frame. column x is your mean values (this will be important later)
+
+#Next 3 lines of code are used to generate standard error for free-living nematodes
+# generate your number of reps for each ftreatment
+count.trt.freeliving<-aggregate(freeliving,by=list(Ftrt=ftreatment),function(x) mylength(x))
+count.trt.freeliving 
+
+#generate your standard deviation by ftreatment
+sd.trt.freeliving<-aggregate(freeliving,by=list(Ftrt=ftreatment), function(x) sd(x,na.rm=T))
+sd.trt.freeliving 
+
+
+# finally, create standard error by dividing sd by square root of counts
+se.trt.freeliving<-sd.trt.freeliving$x/(sqrt(count.trt.freeliving$x))
+se.trt.freeliving #note that this is a vector, not a data frame as you divided two data frames
+
+
+# next we need to generate a vector with mean separation letters so they appear on your graph
+# first we need to know the order in which your ftreatment levels are listed in R.
+# we've already re-ordered the factor levels so we know the order
+# if you didn't, you could run the next line to show you.  
+freeliving.mean
+
+# I'm going to write the order in the next line for reference as I typically manual retype the separation letters from my excel file (order there won't be the same as here)
+#"control","propulse_8oz","propulse_14oz","counter","telone_3gal","telone_6gal"
+
+sep.trt.hcn19.freeliving<-c("a","b","b","b","b","b")
+
+#now I'm going to do the generate the same 3 vectors/data frames for each of my variables
+#if needed, you can add more variables by copying and pasting and using the replace function. Or delete unneeded variables
+#once you've added only the variables you need and entered the mean separations, run the code until the next long line of "#"
+
+stunt.mean <- aggregate(stunt, by=list(Ftrt=ftreatment), function(x) mean(x, na.rm=T))    #first argument is the data being analyzed (response variable)
+
+count.trt.stunt<-aggregate(stunt,by=list(Ftrt=ftreatment),function(x) mylength(x))
+sd.trt.stunt<-aggregate(stunt,by=list(Ftrt=ftreatment), function(x) sd(x,na.rm=T))
+se.trt.stunt<-sd.trt.stunt$x/(sqrt(count.trt.stunt$x))
+
+sep.trt.hcn19.stunt<-c("a","ab","ab","b","c","c")
+
+lesion.mean <- aggregate(lesion, by=list(Ftrt=ftreatment), function(x) mean(x, na.rm=T))    #first argument is the data being analyzed (response variable)
+
+count.trt.lesion<-aggregate(lesion,by=list(Ftrt=ftreatment),function(x) mylength(x))
+sd.trt.lesion<-aggregate(lesion,by=list(Ftrt=ftreatment), function(x) sd(x,na.rm=T))
+se.trt.lesion<-sd.trt.lesion$x/(sqrt(count.trt.lesion$x))
+
+sep.trt.hcn19.lesion<-c("a","b","b","b","b","b")
+
+stubby.mean <- aggregate(stubby, by=list(Ftrt=ftreatment), function(x) mean(x, na.rm=T))    #first argument is the data being analyzed (response variable)
+
+count.trt.stubby<-aggregate(stubby,by=list(Ftrt=ftreatment),function(x) mylength(x))
+sd.trt.stubby<-aggregate(stubby,by=list(Ftrt=ftreatment), function(x) sd(x,na.rm=T))
+se.trt.stubby<-sd.trt.stubby$x/(sqrt(count.trt.stubby$x))
+
+sep.trt.hcn19.stubby<-c("ab","ab","bc","c","a","ab")
+
+sting.mean <- aggregate(sting, by=list(Ftrt=ftreatment), function(x) mean(x, na.rm=T))    #first argument is the data being analyzed (response variable)
+
+count.trt.sting<-aggregate(sting,by=list(Ftrt=ftreatment),function(x) mylength(x))
+sd.trt.sting<-aggregate(sting,by=list(Ftrt=ftreatment), function(x) sd(x,na.rm=T))
+se.trt.sting<-sd.trt.sting$x/(sqrt(count.trt.sting$x))
+
+sep.trt.hcn19.sting<-c("","","","","","")
+
+ring.mean <- aggregate(ring, by=list(Ftrt=ftreatment), function(x) mean(x, na.rm=T))    #first argument is the data being analyzed (response variable)
+
+count.trt.ring<-aggregate(ring,by=list(Ftrt=ftreatment),function(x) mylength(x))
+sd.trt.ring<-aggregate(ring,by=list(Ftrt=ftreatment), function(x) sd(x,na.rm=T))
+se.trt.ring<-sd.trt.ring$x/(sqrt(count.trt.ring$x))
+
+sep.trt.hcn19.ring<-c("a","a","a","a","b","b")
+
+
+
+####################################
+#next step is to generate a big data frame with all the means, standard errors, and separations for each variable
+# you will pull from this to generate your graphs
+
+# We are going to load all the means, etc. as vectors, so we need to create a vector for treatment names
+Treatment.re<-sting.mean$Ftrt
+Treatment.re
+
+
+# here is where we create the big data frame. Note that for means, we've loaded "freeliving.mean$x" (vector) instead of "freeliving.mean" (data frame)
+#if you add or remove variables, you'll want to add or remove them here as well
+
+hcn19.graphs<-data.frame(Treatment.re,
+freeliving.mean$x,se.trt.freeliving,sep.trt.hcn19.freeliving,
+stunt.mean$x,se.trt.stunt,sep.trt.hcn19.stunt,
+lesion.mean$x,se.trt.lesion,sep.trt.hcn19.lesion,
+stubby.mean$x,se.trt.stubby,sep.trt.hcn19.stubby,
+sting.mean$x,se.trt.sting,sep.trt.hcn19.sting)
+hcn19.graphs #note that you have a column for your treatment names as well as the means, se, and separation for each variable
+
+#if you have problems having the big data frame, you could also make a small data frame for each variable, but this way is quicker
+
+
+##############################
+# now to actually start making the graphs
+
+# there is a lot of code here, but most of it you don't have to modify
+# first, just run the whole thing so you see what it looks like:
+
+g<-ggplot(data=hcn19.graphs, aes(x=Treatment.re,fill=Treatment.re,y=stubby.mean$x,ymin=stubby.mean$x-se.trt.stubby,ymax=stubby.mean$x+se.trt.stubby))
+g+geom_bar(position="dodge",stat="identity",width=0.9,color="black")+geom_errorbar(width=.3,size=0.5,colour="black")+
+ylab(expression(paste("Stubby-root nematodes/100",~cm^3,~"soil")))+xlab(NULL)+
+geom_text(aes(x=Treatment.re,y=(stubby.mean$x+se.trt.stubby),label=sep.trt.hcn19.stubby), colour="black",hjust=0.5, vjust=-0.25,size=7)+
+theme_bw()+
+scale_y_continuous(breaks=seq(0,19490,10))+
+theme(strip.background=element_rect(fill=FALSE))+
+theme(axis.title.x = element_text(colour = 'black', size=20),axis.text.x = element_text(colour = 'black', size=18,angle=90,hjust=1,vjust=0.5))+
+theme(axis.title.y = element_text(colour = 'black', size=20,hjust=0.5),axis.text.y=element_text(colour = 'black', size=16))+
+scale_x_discrete(labels=c("Control","Propulse 8oz","Propulse 14oz","Counter","Telone 3gpa","Telone 6gpa"))+
+scale_fill_manual(values=c("gray85","steelblue1","steelblue4","wheat","indianred1","indianred4"),guide=FALSE)
+
+
+###########
+# now let me explain line by line
+
+# generate object g. "data=..." specifies name of data frame (will need to change if change name)
+# the rest of the line sets up your graph foundations (x axis, y axis, variable to base fill color on, y min and max for standard error)
+g<-ggplot(data=hcn19.graphs, aes(x=Treatment.re,fill=Treatment.re,y=stubby.mean$x,ymin=stubby.mean$x-se.trt.stubby,ymax=stubby.mean$x+se.trt.stubby))
+
+# "geom_bar" specifies you are making a bar graph. Others aren't that important right now. note there is a "+" after each line from now on to show that the code continues
+g+geom_bar(position="dodge",stat="identity",width=0.9,color="black")+
+
+#specifies you want to include an error bar
+geom_errorbar(width=.3,size=0.5,colour="black")+
+
+# Rename the title for the y axis so it is more polished. Specify that you don't want a title for the x axis
+ylab(expression(paste("Stubby-root nematodes/100",~cm^3,~"soil")))+xlab(NULL)+
+
+#adds your letters for mean separation (specifies x and y coords, and vector of labels)
+geom_text(aes(x=Treatment.re,y=(stubby.mean$x+se.trt.stubby),label=sep.trt.hcn19.stubby), colour="black",hjust=0.5, vjust=-0.25,size=7)+
+
+# generate graph in black and white theme
+theme_bw()+
+
+#last number specifies how often you want y axis numbers listed. Needs to be changed from graph to graph. 
+#first two are maximum range of where to include numbers. Just set the second one really high and you shouldn't have to change
+scale_y_continuous(breaks=seq(0,19490,10))+
+
+#next three lines are code for the size, font, angle, etc. of x and y axis text. If you need to change this, I can tell you more.
+theme(strip.background=element_rect(fill=FALSE))+
+theme(axis.title.x = element_text(colour = 'black', size=20),axis.text.x = element_text(colour = 'black', size=18,angle=90,hjust=1,vjust=0.5))+
+theme(axis.title.y = element_text(colour = 'black', size=20,hjust=0.5),axis.text.y=element_text(colour = 'black', size=16))+
+
+#Renames the labels for your x axis so they are more polished or concise than original.  Will need to change if copy and paste code to new study
+scale_x_discrete(labels=c("Control","Propulse 8oz","Propulse 14oz","Counter","Telone 3gpa","Telone 6gpa"))+
+
+#specifies fill colors for each treatment. "guide=FALSE". specifies that you don't want a legend for treatments. note that this is the last line, so there is no "+" at the end
+scale_fill_manual(values=c("gray85","steelblue1","steelblue4","wheat","indianred1","indianred4"),guide=FALSE)
+
+#########
+# I typically save my graphs using pdf(). run the whole code from pdf to dev.off()
+# Note that you need to specify the file name and location you want to save to. I usually save to a flash drive as I've had problems saving to c disk on some computers
+# For me, the file name is really important because that is how I keep track of the study, season, and year since I don't label any of them on the graph
+# I list the season or year in the title or footnotes in word/powerpoint
+
+pdf(file="D:/stubby_HCN19_midseason.pdf")
+g<-ggplot(data=hcn19.graphs, aes(x=Treatment.re,fill=Treatment.re,y=stubby.mean$x,ymin=stubby.mean$x-se.trt.stubby,ymax=stubby.mean$x+se.trt.stubby))
+g+geom_bar(position="dodge",stat="identity",width=0.9,color="black")+geom_errorbar(width=.3,size=0.5,colour="black")+
+ylab(expression(paste("Stubby-root nematodes/100",~cm^3,~"soil")))+xlab(NULL)+
+geom_text(aes(x=Treatment.re,y=(stubby.mean$x+se.trt.stubby),label=sep.trt.hcn19.stubby), colour="black",hjust=0.5, vjust=-0.25,size=7)+
+theme_bw()+
+scale_y_continuous(breaks=seq(0,19490,10))+
+theme(strip.background=element_rect(fill=FALSE))+
+theme(axis.title.x = element_text(colour = 'black', size=20),axis.text.x = element_text(colour = 'black', size=18,angle=90,hjust=1,vjust=0.5))+
+theme(axis.title.y = element_text(colour = 'black', size=20,hjust=0.5),axis.text.y=element_text(colour = 'black', size=16))+
+scale_x_discrete(labels=c("Control","Propulse 8oz","Propulse 14oz","Counter","Telone 3gpa","Telone 6gpa"))+
+scale_fill_manual(values=c("gray85","steelblue1","steelblue4","wheat","indianred1","indianred4"),guide=FALSE)
+dev.off()
+
+######
+# a second way to save files if you have problems with the pdf() function
+
+# first run slightly modified code of graph.  run the whole graph into a single object with unique name. (won't generate graph in window)
+stubby.mid.graph<-ggplot(data=hcn19.graphs, aes(x=Treatment.re,fill=Treatment.re,y=stubby.mean$x,ymin=stubby.mean$x-se.trt.stubby,ymax=stubby.mean$x+se.trt.stubby))+
+geom_bar(position="dodge",stat="identity",width=0.9,color="black")+geom_errorbar(width=.3,size=0.5,colour="black")+
+ylab(expression(paste("Stubby-root nematodes/100",~cm^3,~"soil")))+xlab(NULL)+
+geom_text(aes(x=Treatment.re,y=(stubby.mean$x+se.trt.stubby),label=sep.trt.hcn19.stubby), colour="black",hjust=0.5, vjust=-0.25,size=7)+
+theme_bw()+
+scale_y_continuous(breaks=seq(0,19490,10))+
+theme(strip.background=element_rect(fill=FALSE))+
+theme(axis.title.x = element_text(colour = 'black', size=20),axis.text.x = element_text(colour = 'black', size=18,angle=90,hjust=1,vjust=0.5))+
+theme(axis.title.y = element_text(colour = 'black', size=20,hjust=0.5),axis.text.y=element_text(colour = 'black', size=16))+
+scale_x_discrete(labels=c("Control","Propulse 8oz","Propulse 14oz","Counter","Telone 3gpa","Telone 6gpa"))+
+scale_fill_manual(values=c("gray85","steelblue1","steelblue4","wheat","indianred1","indianred4"),guide=FALSE)
+
+# run ggsave function, specifying file name and type as well as the object you are graphing ("plot=stubby...")
+ggsave("D:/stubby_HCN19_midseason.pdf",plot=stubby.mid.graph)
+
+##########
+#now continue to generate graphs for the rest of your variables
+#run the code without the first and last lines to preview the graph in R before finalizing
+
+pdf(file="D:/freeliving_HCN19_midseason.pdf")
+g<-ggplot(data=hcn19.graphs, aes(x=Treatment.re,fill=Treatment.re,y=freeliving.mean$x,ymin=freeliving.mean$x-se.trt.freeliving,ymax=freeliving.mean$x+se.trt.freeliving))
+g+geom_bar(position="dodge",stat="identity",width=0.9,color="black")+geom_errorbar(width=.3,size=0.5,colour="black")+
+ylab(expression(paste("Free-living nematodes/100",~cm^3,~"soil")))+xlab(NULL)+
+geom_text(aes(x=Treatment.re,y=(freeliving.mean$x+se.trt.freeliving),label=sep.trt.hcn19.freeliving), colour="black",hjust=0.5, vjust=-0.25,size=7)+
+theme_bw()+
+scale_y_continuous(breaks=seq(0,19490,100))+
+theme(strip.background=element_rect(fill=FALSE))+
+theme(axis.title.x = element_text(colour = 'black', size=20),axis.text.x = element_text(colour = 'black', size=18,angle=90,hjust=1,vjust=0.5))+
+theme(axis.title.y = element_text(colour = 'black', size=20,hjust=0.5),axis.text.y=element_text(colour = 'black', size=16))+
+scale_x_discrete(labels=c("Control","Propulse 8oz","Propulse 14oz","Counter","Telone 3gpa","Telone 6gpa"))+
+scale_fill_manual(values=c("gray85","steelblue1","steelblue4","wheat","indianred1","indianred4"),guide=FALSE)
+dev.off()
+
+
+pdf(file="D:/stunt_HCN19_midseason.pdf")
+g<-ggplot(data=hcn19.graphs, aes(x=Treatment.re,fill=Treatment.re,y=stunt.mean$x,ymin=stunt.mean$x-se.trt.stunt,ymax=stunt.mean$x+se.trt.stunt))
+g+geom_bar(position="dodge",stat="identity",width=0.9,color="black")+geom_errorbar(width=.3,size=0.5,colour="black")+
+ylab(expression(paste("Stunt nematodes/100",~cm^3,~"soil")))+xlab(NULL)+
+geom_text(aes(x=Treatment.re,y=(stunt.mean$x+se.trt.stunt),label=sep.trt.hcn19.stunt), colour="black",hjust=0.5, vjust=-0.25,size=7)+
+theme_bw()+
+theme(strip.background=element_rect(fill=FALSE))+
+theme(axis.title.x = element_text(colour = 'black', size=20),axis.text.x = element_text(colour = 'black', size=18,angle=90,hjust=1,vjust=0.5))+
+theme(axis.title.y = element_text(colour = 'black', size=20,hjust=0.5),axis.text.y=element_text(colour = 'black', size=16))+
+scale_x_discrete(labels=c("Control","Propulse 8oz","Propulse 14oz","Counter","Telone 3gpa","Telone 6gpa"))+
+scale_fill_manual(values=c("gray85","steelblue1","steelblue4","wheat","indianred1","indianred4"),guide=FALSE)
+dev.off()
+
+pdf(file="D:/lesion_HCN19_midseason.pdf")
+g<-ggplot(data=hcn19.graphs, aes(x=Treatment.re,fill=Treatment.re,y=lesion.mean$x,ymin=lesion.mean$x-se.trt.lesion,ymax=lesion.mean$x+se.trt.lesion))
+g+geom_bar(position="dodge",stat="identity",width=0.9,color="black")+geom_errorbar(width=.3,size=0.5,colour="black")+
+ylab(expression(paste("Lesion nematodes/100",~cm^3,~"soil")))+xlab(NULL)+
+geom_text(aes(x=Treatment.re,y=(lesion.mean$x+se.trt.lesion),label=sep.trt.hcn19.lesion), colour="black",hjust=0.5, vjust=-0.25,size=7)+
+theme_bw()+
+scale_y_continuous(breaks=seq(0,19490,10))+
+theme(strip.background=element_rect(fill=FALSE))+
+theme(axis.title.x = element_text(colour = 'black', size=20),axis.text.x = element_text(colour = 'black', size=18,angle=90,hjust=1,vjust=0.5))+
+theme(axis.title.y = element_text(colour = 'black', size=20,hjust=0.5),axis.text.y=element_text(colour = 'black', size=16))+
+scale_x_discrete(labels=c("Control","Propulse 8oz","Propulse 14oz","Counter","Telone 3gpa","Telone 6gpa"))+
+scale_fill_manual(values=c("gray85","steelblue1","steelblue4","wheat","indianred1","indianred4"),guide=FALSE)
+dev.off()
+
+pdf(file="D:/sting_HCN19_midseason.pdf")
+g<-ggplot(data=hcn19.graphs, aes(x=Treatment.re,fill=Treatment.re,y=sting.mean$x,ymin=sting.mean$x-se.trt.sting,ymax=sting.mean$x+se.trt.sting))
+g+geom_bar(position="dodge",stat="identity",width=0.9,color="black")+geom_errorbar(width=.3,size=0.5,colour="black")+
+ylab(expression(paste("Sting nematodes/100",~cm^3,~"soil")))+xlab(NULL)+
+geom_text(aes(x=Treatment.re,y=(sting.mean$x+se.trt.sting),label=sep.trt.hcn19.sting), colour="black",hjust=0.5, vjust=-0.25,size=7)+
+theme_bw()+
+scale_y_continuous(breaks=seq(0,1490,10))+
+theme(strip.background=element_rect(fill=FALSE))+
+theme(axis.title.x = element_text(colour = 'black', size=20),axis.text.x = element_text(colour = 'black', size=18,angle=90,hjust=1,vjust=0.5))+
+theme(axis.title.y = element_text(colour = 'black', size=20,hjust=0.5),axis.text.y=element_text(colour = 'black', size=16))+
+scale_x_discrete(labels=c("Control","Propulse 8oz","Propulse 14oz","Counter","Telone 3gpa","Telone 6gpa"))+
+scale_fill_manual(values=c("gray85","steelblue1","steelblue4","wheat","indianred1","indianred4"),guide=FALSE)
+dev.off()
